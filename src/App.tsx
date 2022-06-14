@@ -1,24 +1,45 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useRef } from 'react';
+import Selectable from './components/Selectable';
+import SelectionProvider from './components/SelectionProvider';
 
 function App() {
+  const scrollingElementRef = useRef(document.documentElement);
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <SelectionProvider<HTMLElement, { index: number }>
+        scrollingElementRef={scrollingElementRef}
+        onSelectFinish={(selectedItems) => {
+          console.log(
+            selectedItems
+              .filter((item) => item.intersecting)
+              .map((item) => item.data)
+          );
+        }}
+      >
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          {Array.from({ length: 50 }, (_, i) => (
+            <Selectable getData={() => ({ index: i })}>
+              {(ref, { intersecting }) => (
+                <div
+                  ref={ref as React.LegacyRef<HTMLDivElement>}
+                  style={{
+                    display: 'inline-block',
+                    padding: 16,
+                    border: '2px solid #f00',
+                    background: intersecting
+                      ? 'rgba(255, 0, 0, .2)'
+                      : 'transparent',
+                    borderRadius: 2,
+                    userSelect: 'none',
+                  }}
+                >
+                  {`SELECTABLE_${i + 1}`}
+                </div>
+              )}
+            </Selectable>
+          ))}
+        </div>
+      </SelectionProvider>
     </div>
   );
 }
