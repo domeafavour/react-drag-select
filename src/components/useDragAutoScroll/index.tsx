@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import AutoScrollManager from './AutoScrollManager';
-import { AutoScrollOptions } from './typings';
+import { AutoScrollOptions, Scrollable } from './typings';
 import { getMouseClientPositionOnContainer } from './utils';
 
-function useDragAutoScroll<E extends HTMLElement>(
+function useDragAutoScroll<E extends Scrollable>(
   containerRef: React.RefObject<E>,
   options?: AutoScrollOptions,
 ) {

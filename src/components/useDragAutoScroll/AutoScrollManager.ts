@@ -1,7 +1,7 @@
-import { MaybeNull, ScrollCallback, ScrollingListener } from './typings';
+import { MaybeNull, Scrollable, ScrollCallback, ScrollingListener } from './typings';
 import { isReachedBottom, isReachedLeft, isReachedRight, isReachedTop } from './utils';
 
-class AutoScrollManager<E extends HTMLElement> {
+class AutoScrollManager<E extends Scrollable> {
   private raf: number = -1;
 
   private scrollableElement: MaybeNull<E> = null;
