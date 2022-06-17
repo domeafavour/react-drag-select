@@ -6,7 +6,10 @@ export type ObserveResult<T> = {
   data: T;
 };
 
-export type SelectionObserver<T> = (selection: Box) => ObserveResult<T>;
+export type SelectionObserver<T> = (
+  selection: Box,
+  scrollingElement: HTMLElement | null
+) => ObserveResult<T>;
 
 export type SelectionUtils<T> = {
   observe: (observer: SelectionObserver<T>) => () => void;

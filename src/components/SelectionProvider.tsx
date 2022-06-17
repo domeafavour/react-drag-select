@@ -1,15 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import ReactDOM from 'react-dom';
 import {
   ObserveResult,
   SelectionContext,
   SelectionObserver,
   SelectionUtils,
 } from './context';
-import { Box } from './typings';
+import { Box, Position } from './typings';
 import {
   calculateRenderRect,
-  getMousePosition,
   getMousePositionRelativeToElement,
 } from './utils';
 
@@ -20,11 +18,10 @@ type Props<ScrollingElement, DT> = {
 };
 
 function SelectionProvider<ScrollingElement extends HTMLElement, DT>({
-  scrollingElementRef: scrollingElement,
+  scrollingElementRef,
   onSelectFinish,
   children,
 }: Props<ScrollingElement, DT>): React.ReactElement {
-  const rangeContainer = document.body;
   const [observers] = useState(() => new Set<SelectionObserver<DT>>());
   const observersRef = useRef(observers);
 
@@ -41,26 +38,29 @@ function SelectionProvider<ScrollingElement extends HTMLElement, DT>({
   });
 
   useEffect(() => {
-    const startClientPosition = {
+    let startAbsolutePosition = {
       left: 0,
       top: 0,
     };
 
-    const startAbsolutePosition = {
+    // 记住上一次鼠标移动的位置，在自动滚动时重新计算高度
+    let lastMovePosition: Position = {
       left: 0,
       top: 0,
     };
+
+    const scrollingElement = scrollingElementRef.current!;
 
     let selectedItems: ObserveResult<DT>[] = [];
 
     const renderSelection = (rect: Box) => {
       requestAnimationFrame(() => {
         if (rangeDomRef.current) {
-          const renderRect = calculateRenderRect(
-            rect,
-            startClientPosition,
-            scrollingElement.current!.getBoundingClientRect()
-          );
+          const renderRect = calculateRenderRect(rect, startAbsolutePosition, {
+            ...scrollingElement.getBoundingClientRect(),
+            height: scrollingElement.scrollHeight,
+            width: scrollingElement.scrollWidth,
+          });
 
           rangeDomRef.current.style.width = `${renderRect.width}px`;
           rangeDomRef.current.style.height = `${renderRect.height}px`;
@@ -72,54 +72,83 @@ function SelectionProvider<ScrollingElement extends HTMLElement, DT>({
 
     const handleMouseMove = (e: MouseEvent) => {
       rangeDomRef.current!.style.visibility = 'visible';
+      const { left: mouseLeft, top: mouseTop } =
+        getMousePositionRelativeToElement(scrollingElement, e);
 
       const selectionRect: Box = {
-        width: Math.abs(e.clientX - startClientPosition.left),
-        height: Math.abs(e.clientY - startClientPosition.top),
-        left: Math.min(e.clientX, startClientPosition.left),
-        top: Math.min(e.clientY, startClientPosition.top),
-      };
-
-      const { left: mouseLeft, top: mouseTop } =
-        getMousePositionRelativeToElement(scrollingElement.current!, e);
-
-      renderSelection({
         width: Math.abs(mouseLeft - startAbsolutePosition.left),
         height: Math.abs(mouseTop - startAbsolutePosition.top),
         left: Math.min(mouseLeft, startAbsolutePosition.left),
         top: Math.min(mouseTop, startAbsolutePosition.top),
-      });
+      };
+
+      lastMovePosition = { left: e.clientX, top: e.clientY };
+
+      renderSelection(selectionRect);
 
       selectedItems = [];
 
       observersRef.current.forEach((observer) => {
-        selectedItems.push(observer(selectionRect));
+        selectedItems.push(observer(selectionRect, scrollingElement));
+      });
+    };
+
+    const handleContainerScroll = () => {
+      const selectionRect = {
+        width: Math.abs(
+          lastMovePosition.left +
+            scrollingElement.scrollLeft -
+            startAbsolutePosition.left
+        ),
+        height: Math.abs(
+          lastMovePosition.top +
+            scrollingElement.scrollTop -
+            startAbsolutePosition.top
+        ),
+        left: Math.min(
+          lastMovePosition.left + scrollingElement.scrollLeft,
+          startAbsolutePosition.left
+        ),
+        top: Math.min(
+          lastMovePosition.top + scrollingElement.scrollTop,
+          startAbsolutePosition.top
+        ),
+      };
+
+      // 刷新选择区域展示
+      renderSelection(selectionRect);
+
+      selectedItems = [];
+
+      observersRef.current.forEach((observer) => {
+        selectedItems.push(observer(selectionRect, scrollingElement));
       });
     };
 
     const handleMouseDown = (e: MouseEvent) => {
-      startClientPosition.left = e.clientX;
-      startClientPosition.top = e.clientY;
-
-      const { left: mouseLeft, top: mouseTop } = getMousePosition(e);
-      startAbsolutePosition.left = mouseLeft;
-      startAbsolutePosition.top = mouseTop;
+      startAbsolutePosition = getMousePositionRelativeToElement(
+        scrollingElement,
+        e
+      );
 
       window.addEventListener('mousemove', handleMouseMove);
+      scrollingElement.addEventListener('scroll', handleContainerScroll);
     };
 
     const handleMouseUp = (e: MouseEvent) => {
       renderSelection({ height: 0, left: 0, top: 0, width: 0 });
       rangeDomRef.current!.style.visibility = 'hidden';
       window.removeEventListener('mousemove', handleMouseMove);
+      scrollingElement.removeEventListener('scroll', handleContainerScroll);
       onSelectFinishRef.current?.(selectedItems);
     };
 
-    window.addEventListener('mousedown', handleMouseDown);
+    scrollingElement.addEventListener('mousedown', handleMouseDown);
     window.addEventListener('mouseup', handleMouseUp);
 
     return () => {
-      window.removeEventListener('mousedown', handleMouseDown);
+      scrollingElement.removeEventListener('mousedown', handleMouseDown);
+      scrollingElement.removeEventListener('scroll', handleContainerScroll);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
@@ -127,28 +156,24 @@ function SelectionProvider<ScrollingElement extends HTMLElement, DT>({
 
   const rangeDomRef = useRef<HTMLDivElement>(null);
 
-  const rangeElement = (
-    <div
-      ref={rangeDomRef}
-      style={{
-        position: 'absolute',
-        width: 0,
-        height: 0,
-        border: '2px solid #1e7574',
-        borderRadius: 2,
-        backgroundColor: 'rgba(46, 140, 143, .2)',
-        boxSizing: 'border-box',
-        visibility: 'hidden',
-      }}
-    />
-  );
-
   const contextValue = useMemo(() => ({ observe }), [observe]);
 
   return (
     <SelectionContext.Provider value={contextValue}>
       {children}
-      {ReactDOM.createPortal(rangeElement, rangeContainer)}
+      <div
+        ref={rangeDomRef}
+        style={{
+          position: 'absolute',
+          width: 0,
+          height: 0,
+          border: '2px solid #1e7574',
+          borderRadius: 2,
+          backgroundColor: 'rgba(46, 140, 143, .2)',
+          boxSizing: 'border-box',
+          visibility: 'hidden',
+        }}
+      />
     </SelectionContext.Provider>
   );
 }

@@ -10,8 +10,8 @@ function useObserveSelection<T>(observer: SelectionObserver<T>) {
   });
 
   useEffect(() => {
-    const unobserve = observe((selection) => {
-      const observeResult = observerRef.current(selection);
+    const unobserve = observe((selection, scrollingElement) => {
+      const observeResult = observerRef.current(selection, scrollingElement);
       setIntersecting(observeResult.intersecting);
       return observeResult;
     });

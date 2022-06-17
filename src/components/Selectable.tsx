@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
+import { Box } from './typings';
 import useObserveSelection from './useObserveSelection';
-import { boxIntersects } from './utils';
+import { boxIntersects, getElementPositionInContainer } from './utils';
 
 type ChildProps = {
   intersecting: boolean;
@@ -24,15 +25,27 @@ function Selectable<T extends HTMLElement, DT>({
     getDataRef.current = getData;
   });
 
-  const [intersecting] = useObserveSelection<DT>((selection) => {
-    return {
-      intersecting: boxIntersects(
-        domRef.current!.getBoundingClientRect(),
-        selection
-      ),
-      data: getDataRef.current(),
-    };
-  });
+  const [intersecting] = useObserveSelection<DT>(
+    (selection, scrollingElement) => {
+      const { left, top } = getElementPositionInContainer(
+        domRef.current!,
+        scrollingElement!
+      );
+
+      const domRect = domRef.current!.getBoundingClientRect();
+      const box: Box = {
+        top,
+        left,
+        height: domRect.height,
+        width: domRect.width,
+      };
+
+      return {
+        intersecting: boxIntersects(box, selection),
+        data: getDataRef.current(),
+      };
+    }
+  );
 
   return children(domRef, { intersecting });
 }
