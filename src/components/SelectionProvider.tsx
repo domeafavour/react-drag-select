@@ -126,6 +126,10 @@ function SelectionProvider<ScrollingElement extends HTMLElement, DT>({
     };
 
     const handleMouseDown = (e: MouseEvent) => {
+      if (e.button !== 0) {
+        return;
+      }
+
       startAbsolutePosition = getMousePositionRelativeToElement(
         scrollingElement,
         e
