@@ -67,8 +67,10 @@ function useDragAutoScroll<E extends Scrollable>(
       }
     };
 
-    const handelMouseDown = () => {
-      window.addEventListener('mousemove', handleMouseMove);
+    const handelMouseDown = (e: MouseEvent) => {
+      if (e.button === 0) {
+        window.addEventListener('mousemove', handleMouseMove);
+      }
     };
 
     const handleMouseUp = () => {
