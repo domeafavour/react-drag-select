@@ -11,3 +11,14 @@
 - [ ] 解决自动滚动时的抖动问题
 - [ ] 嵌套滚动处理？
 - [x] 综合`useDragAutoScroll`和`SelectionProvider`
+
+## 注意
+
+设置Scrollable样式
+
+```css
+.scrollable {
+  overflow: auto;
+  position: relative;
+}
+```
