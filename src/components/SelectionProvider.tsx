@@ -18,6 +18,8 @@ type Props<ScrollingElement, DT> = {
   children?: React.ReactNode;
 };
 
+export type { Props as SelectionProviderProps };
+
 function SelectionProvider<ScrollingElement extends Scrollable, DT>({
   scrollingElementRef,
   onSelectFinish,
