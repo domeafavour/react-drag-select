@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
 import { Box } from './typings';
+import { Scrollable } from './useDragAutoScroll/typings';
 
 export type ObserveResult<T> = {
   intersecting: boolean;
@@ -8,7 +9,7 @@ export type ObserveResult<T> = {
 
 export type SelectionObserver<T> = (
   selection: Box,
-  scrollingElement: HTMLElement | null
+  scrollingElement: Scrollable | null
 ) => ObserveResult<T>;
 
 export type SelectionUtils<T> = {

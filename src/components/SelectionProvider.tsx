@@ -6,6 +6,7 @@ import {
   SelectionUtils,
 } from './context';
 import { Box, Position } from './typings';
+import { Scrollable } from './useDragAutoScroll/typings';
 import {
   calculateRenderRect,
   getMousePositionRelativeToElement,
@@ -17,7 +18,7 @@ type Props<ScrollingElement, DT> = {
   children?: React.ReactNode;
 };
 
-function SelectionProvider<ScrollingElement extends HTMLElement, DT>({
+function SelectionProvider<ScrollingElement extends Scrollable, DT>({
   scrollingElementRef,
   onSelectFinish,
   children,

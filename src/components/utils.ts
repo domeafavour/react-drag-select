@@ -1,4 +1,5 @@
 import { Box, Position } from './typings';
+import { Scrollable } from './useDragAutoScroll/typings';
 
 export function getMousePosition(e: MouseEvent): Position {
   const scrollX =
@@ -9,7 +10,7 @@ export function getMousePosition(e: MouseEvent): Position {
   return { left, top };
 }
 
-export function getElementPositionInContainer<E extends HTMLElement>(
+export function getElementPositionInContainer<E extends Scrollable>(
   el: E,
   container: E
 ): Position {
@@ -20,7 +21,7 @@ export function getElementPositionInContainer<E extends HTMLElement>(
   };
 }
 
-export function getMousePositionRelativeToElement<E extends HTMLElement>(
+export function getMousePositionRelativeToElement<E extends Scrollable>(
   el: E,
   e: MouseEvent
 ): Position {

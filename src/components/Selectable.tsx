@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Box } from './typings';
+import { Scrollable } from './useDragAutoScroll/typings';
 import useObserveSelection from './useObserveSelection';
 import { boxIntersects, getElementPositionInContainer } from './utils';
 
@@ -7,14 +8,14 @@ type ChildProps = {
   intersecting: boolean;
 };
 
-interface Props<T extends HTMLElement, DT> {
+interface Props<T extends Scrollable, DT> {
   children: (ref: React.Ref<T>, props: ChildProps) => React.ReactElement;
   getData: () => DT;
 }
 
 export type { Props as SelectableProps };
 
-function Selectable<T extends HTMLElement, DT>({
+function Selectable<T extends Scrollable, DT>({
   children,
   getData,
 }: Props<T, DT>): React.ReactElement {
