@@ -1,12 +1,24 @@
 import React, { useRef } from 'react';
+import DragSelect from './components/DragSelect';
 import Selectable from './components/Selectable';
-import SelectionProvider from './components/SelectionProvider';
+import { Scrollable } from './components/useDragAutoScroll/typings';
 
 function App() {
-  const scrollingElementRef = useRef(document.documentElement);
+  const scrollingElementRef = useRef<HTMLDivElement>(null);
+
   return (
-    <div className="App">
-      <SelectionProvider<HTMLElement, { index: number }>
+    <div
+      ref={scrollingElementRef}
+      className="App"
+      style={{
+        position: 'relative',
+        overflow: 'auto',
+        width: 500,
+        height: 500,
+        border: '1px solid #f00',
+      }}
+    >
+      <DragSelect<Scrollable, { index: number }>
         scrollingElementRef={scrollingElementRef}
         onSelectFinish={(selectedItems) => {
           console.log(
@@ -16,7 +28,7 @@ function App() {
           );
         }}
       >
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', width: 800 }}>
           {Array.from({ length: 50 }, (_, i) => (
             <Selectable getData={() => ({ index: i })}>
               {(ref, { intersecting }) => (
@@ -39,7 +51,7 @@ function App() {
             </Selectable>
           ))}
         </div>
-      </SelectionProvider>
+      </DragSelect>
     </div>
   );
 }
